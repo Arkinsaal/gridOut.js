@@ -10,24 +10,19 @@
 
     function getBlocks(gridSize) {
         var newBlockString = "<div class='gridOut--layoutHolder' style='width: 100%; height: 100%; position: relative; z-index: -1;'>";
-
         var newGrid = document.createElement('div');
         newGrid.className = "gridOut--layoutHolder";
         newGrid.style.width = "100%";
         newGrid.style.height = "100%";
         newGrid.style.position = "relative";
         newGrid.style.zIndex = -1;
-
         var newGridBlocks = "";
         var width = ((gridSize[0]/100)*100) + "%",
             height = ((gridSize[1]/100)*100) + "%";
-
         for (var i=0;i<(gridSize[0]*gridSize[1]); i++) {
             newGridBlocks+="<div style='width:" + width + "; height:" + height + "'></div>";
         };
-
         newGrid.innerHTML = newGridBlocks;
-
         return newGrid;
     };
 
