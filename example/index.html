@@ -2,12 +2,16 @@
 <html>
     <head>
         <link rel="stylesheet" type="text/css" href="./example.css">
-        <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+        <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.11.0/themes/smoothness/jquery-ui.css">
+        <!-- <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script> -->
+        <!-- <script src="https://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script> -->
         <script src="../gridout.js"></script>
+        <script src="./example.js"></script>
     </head>
-    <body>
+    <body onload="start()">
         <div id="gridHolder">
-            
+            <div class='widget'></div>
+            <div class='widget'></div>
         </div>
         <div id="options">
             <div onclick="addElement()">Add New Element</div>
