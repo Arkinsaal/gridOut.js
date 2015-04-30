@@ -2,23 +2,31 @@
     'use strict';
 
     var defaults = {
-        gridSize: [10, 10],
+        gridSize: [12, 12],
         showGridLines: false,
         movables: ""
     };
+
+    Element.prototype.goSetStyles = function(properties) {
+        for (var prop in properties) {
+            this.style[prop] = properties[prop];
+        }
+    }
 
 
     function getBlocks(gridSize) {
         var newBlockString = "<div class='gridOut--layoutHolder' style='width: 100%; height: 100%; position: relative; z-index: -1;'>";
         var newGrid = document.createElement('div');
         newGrid.className = "gridOut--layoutHolder";
-        newGrid.style.width = "100%";
-        newGrid.style.height = "100%";
-        newGrid.style.position = "relative";
-        newGrid.style.zIndex = -1;
+        newGrid.goSetStyles({
+            width: "100%",
+            height: "100%",
+            position: "relative",
+            zIndex: -1
+        })
         var newGridBlocks = "";
-        var width = ((gridSize[0]/100)*100) + "%",
-            height = ((gridSize[1]/100)*100) + "%";
+        var width = (100/gridSize[0]) + "%",
+            height = (100/gridSize[1]) + "%";
         for (var i=0;i<(gridSize[0]*gridSize[1]); i++) {
             newGridBlocks+="<div style='width:" + width + "; height:" + height + "'></div>";
         };
@@ -34,11 +42,12 @@
         };
     };
 
-    function animateToPos(ele, master, grid) {
+    function animateToPosAndSize(ele, master, grid) {
 
         var first = null,
             last = null,
-            distanceToTravel = [];
+            distanceToTravel = [],
+            sizeTochange = [];
 
         function step(timestamp) {
             if (!first) first=timestamp;
@@ -46,25 +55,32 @@
             var gap = timestamp - last;
             last = timestamp;
             if ((timestamp - first) < 100) {
-                ele.style.left = (ele.offsetLeft - distanceToTravel[0]*(gap/100)) + "px";
-                ele.style.top = (ele.offsetTop - distanceToTravel[1]*(gap/100)) + "px";
+                ele.goSetStyles({
+                    left: (ele.offsetLeft - distanceToTravel[0]*(gap/100)) + "px",
+                    top: (ele.offsetTop - distanceToTravel[1]*(gap/100)) + "px",
+                    width: (ele.clientWidth - sizeTochange[0]*(gap/100)) + "px",
+                    height: (ele.clientHeight - sizeTochange[1]*(gap/100)) + "px"
+                });
                 window.requestAnimationFrame(step);
             } else {
-                ele.style.left = (tarPos[0]*10) + "%";
-                ele.style.top = (tarPos[1]*10) + "%";
+                ele.goSetStyles({
+                    left: (tarPos[0]*(100/grid[0])) + "%",
+                    top: (tarPos[1]*(100/grid[1])) + "%",
+                    width: (tarSize[0]*(100/grid[0])) + "%",
+                    height: (tarSize[1]*(100/grid[1])) + "%"
+                });
             };
         };
 
         var curPos = [ele.offsetLeft, ele.offsetTop];
-        var tarPos = [getClosestGrid(curPos[0], master[0], defaults.gridSize[0]), getClosestGrid(curPos[1], master[1], defaults.gridSize[1])];
+        var curSize = [ele.clientWidth, ele.clientHeight];
+        var tarPos = [getClosestGrid(curPos[0], master[0], grid[0]), getClosestGrid(curPos[1], master[1], grid[1])];
+        var tarSize = [getClosestGrid(curSize[0], master[0], grid[0]), getClosestGrid(curSize[1], master[1], grid[1])];
 
         distanceToTravel = [curPos[0] - (tarPos[0]*(master[0]/grid[0])), curPos[1] - (tarPos[1]*(master[1]/grid[1]))];
+        sizeTochange = [curSize[0] - (tarSize[0]*(master[0]/grid[0])), curSize[1] - (tarSize[1]*(master[1]/grid[1]))];
 
         window.requestAnimationFrame(step);
-    };
-
-    function animateToSize() {
-        
     };
 
     Element.prototype.gridOut = function (params) {
@@ -75,29 +91,35 @@
 
         function setupElement(ele) {
             function moveElement(event) {
-                ele.style.left=event.clientX-(ele.clientWidth/2);
-                ele.style.top=event.clientY-(ele.clientHeight/2);
+                ele.goSetStyles({
+                    left: event.clientX-(ele.clientWidth/2),
+                    top:event.clientY-(ele.clientHeight/2)
+                });
             };
             ele.className = ele.className + ' gridOut--movable';
+            ele.goSetStyles({
+                resize: "both",
+                overflow:"auto"
+            });
             ele.addEventListener('mousedown', function() {
                 this.addEventListener('mousemove', moveElement);
             });
             ele.addEventListener('mouseup', function() {
                 this.removeEventListener('mousemove', moveElement);
-                animateToPos(ele, [that.clientWidth, that.clientHeight], settings.gridSize)
+                animateToPosAndSize(ele, [that.clientWidth, that.clientHeight], settings.gridSize)
             });
         };
 
         if (typeof params === "object") {
             for (var key in defaults) {
-                if (params[key]) defaults[key] = params[key];
+                if (params[key]) settings[key] = params[key];
             };
         };
 
         if (settings.movables!="") elementArray = document.querySelectorAll(settings.movables);
 
         // Append background grid if needed.
-        if (defaults.showGridLines) this.appendChild(getBlocks(settings.gridSize));
+        if (settings.showGridLines) this.appendChild(getBlocks(settings.gridSize));
 
         for(var i=0; i<elementArray.length;i++) {
             setupElement(elementArray[i]);
