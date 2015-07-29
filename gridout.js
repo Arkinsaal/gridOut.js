@@ -3,6 +3,7 @@
 
     var defaults = {
         gridSize: [12, 12],
+        gridSpacing: [5, 5]
         showGridLines: false,
         movables: ""
     };
@@ -53,14 +54,14 @@
         function step(timestamp) {
             if (!first) first=timestamp;
             if (!last) last=timestamp;
-            var gap = timestamp - last;
-            last = timestamp;
+            var gap = (timestamp - last)/100;
+                last = timestamp;
             if ((timestamp - first) < 100) {
                 goSetStyles(ele, {
-                    left: (ele.offsetLeft - distanceToTravel[0]*(gap/100)) + "px",
-                    top: (ele.offsetTop - distanceToTravel[1]*(gap/100)) + "px",
-                    width: (ele.clientWidth - sizeTochange[0]*(gap/100)) + "px",
-                    height: (ele.clientHeight - sizeTochange[1]*(gap/100)) + "px"
+                    left: (ele.offsetLeft - distanceToTravel[0]*gap) + "px",
+                    top: (ele.offsetTop - distanceToTravel[1]*gap) + "px",
+                    width: (ele.clientWidth - sizeTochange[0]*gap) + "px",
+                    height: (ele.clientHeight - sizeTochange[1]*gap) + "px"
                 });
                 window.requestAnimationFrame(step);
             } else {
@@ -95,21 +96,26 @@
         });
 
         function setupElement(ele) {
+            var mouseOffset = [0,0];
             function moveElement(event) {
                 goSetStyles(ele, {
-                    left: event.clientX-(ele.clientWidth/2),
-                    top:event.clientY-(ele.clientHeight/2)
+                    left: (event.clientX-mouseOffset[0]),
+                    top: (event.clientY-mouseOffset[1])
                 });
             };
+
             ele.classList.add("gridOut--movable");
             goSetStyles(ele, {
                 resize: "both",
                 overflow:"auto"
             });
-            ele.addEventListener('mousedown', function() {
+            ele.addEventListener('mousedown', function(e) {
                 that.getElementsByClassName('gridOut--layoutHolder')[0].classList.add("gridOut--somethingActive");
                 this.classList.add("gridOut--movableActive");
                 this.style.zIndex = 2;
+
+                mouseOffset = [(e.clientX - ele.offsetLeft), (e.clientY - ele.offsetTop)];
+
                 this.addEventListener('mousemove', moveElement);
             });
             ele.addEventListener('mouseup', function() {
@@ -117,7 +123,7 @@
                 this.classList.remove("gridOut--movableActive");
                 this.style.zIndex = null;
                 this.removeEventListener('mousemove', moveElement);
-                animateToPosAndSize(ele, [that.clientWidth, that.clientHeight], settings.gridSize)
+                animateToPosAndSize(ele, [that.clientWidth, that.clientHeight], settings.gridSize);
             });
             animateToPosAndSize(ele, [that.clientWidth, that.clientHeight], settings.gridSize)
         };
